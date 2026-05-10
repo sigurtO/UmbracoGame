@@ -480,3 +480,8 @@ umbraco-package-schema.json
 
 # Media files
 /wwwroot/media/
+
+# Force Git to track the SQLite database and uSync
+!umbraco/Data/*.db
+!umbraco/Data/*.sqlite.db
+!uSync/
