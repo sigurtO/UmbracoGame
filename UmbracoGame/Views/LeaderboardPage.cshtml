@@ -1,0 +1,80 @@
+﻿@using Umbraco.Cms.Web.Common.PublishedModels;
+@inherits Umbraco.Cms.Web.Common.Views.UmbracoViewPage<ContentModels.LeaderboardPage>
+@using ContentModels = Umbraco.Cms.Web.Common.PublishedModels;
+@{
+	Layout = null;
+
+	var allRuns = Model.Children
+        .Where(x => x.ContentType.Alias == "runRecord")
+        .OrderByDescending(x => x.Value<int>("finalLevel"))
+        .ThenByDescending(x => x.Value<decimal>("totalXP"));
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@Model.Value("title")</title>
+    
+    <style>
+        body { background-color: #121212; color: #e0e0e0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; text-align: center; margin: 0; padding: 2rem; }
+        h1 { color: #00ffcc; text-transform: uppercase; letter-spacing: 2px; }
+        .description { margin-bottom: 2rem; color: #aaaaaa; }
+        
+        table { margin: 0 auto; border-collapse: collapse; width: 100%; max-width: 1000px; background-color: #1e1e1e; box-shadow: 0 4px 8px rgba(0,0,0,0.5); border-radius: 8px; overflow: hidden; }
+        th, td { padding: 1.2rem; border-bottom: 1px solid #333; text-align: center; }
+        th { background-color: #2a2a2a; color: #00ffcc; font-weight: bold; text-transform: uppercase; font-size: 0.9rem; }
+        tr:hover { background-color: #252525; transition: background-color 0.2s; }
+        
+        .rank { font-weight: bold; color: #ffbf00; }
+        .empty-state { padding: 3rem; color: #777; font-style: italic; }
+    </style>
+</head>
+<body>
+
+    <h1>@Model.Value("title")</h1>
+    <div class="description">
+        @Html.Raw(Model.Value("description"))
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Rank</th>
+                <th>Player</th>
+                <th>Level Reached</th>
+                <th>Total XP</th>
+                <th>Time Survived (s)</th>
+                <th>Cause of Death</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (allRuns.Any())
+            {
+                int rank = 1;
+                foreach (var run in allRuns)
+                {
+                    <tr>
+                        <td class="rank">#@rank</td>
+                        
+                        <td>@run.Value("playerName")</td>
+                        <td>@run.Value("finalLevel")</td>
+                        <td>@run.Value("totalXP")</td>
+                        <td>@run.Value("timeSurvived")</td>
+                        <td>@run.Value("causeOfDeath")</td>
+                    </tr>
+                    rank++;
+                }
+            }
+            else
+            {
+                <tr>
+                    <td colspan="6" class="empty-state">No runs recorded yet. Waiting for game data...</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+</body>
+</html>
