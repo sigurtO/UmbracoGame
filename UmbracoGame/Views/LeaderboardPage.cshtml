@@ -2,9 +2,9 @@
 @inherits Umbraco.Cms.Web.Common.Views.UmbracoViewPage<ContentModels.LeaderboardPage>
 @using ContentModels = Umbraco.Cms.Web.Common.PublishedModels;
 @{
-	Layout = null;
+	Layout = "master.cshtml";
 
-	var allRuns = Model.Children
+	var allRuns = Model.Children()
 .Where(x => x.ContentType.Alias == "runRecord")
         .OrderByDescending(x => x.Value<int>("encountersSurvived"))
         .ThenByDescending(x => x.Value<int>("enemiesKilled"));
