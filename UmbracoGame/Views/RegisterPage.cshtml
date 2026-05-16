@@ -1,0 +1,45 @@
+﻿@inherits Umbraco.Cms.Web.Common.Views.UmbracoViewPage
+@using UmbracoGame.Models
+@using UmbracoGame.Controllers
+@{
+	Layout = "master.cshtml";
+ViewData["Title"] = "New Recruit Registration";
+    
+    var registerModel = new RegisterViewModel();
+}
+
+<div style="max-width: 450px; margin: 4rem auto; background: #161b22; padding: 2.5rem; border-radius: 8px; box-shadow: 0 8px 16px rgba(0,0,0,0.6); border: 1px solid #30363d;">
+    <h1 style="color: #58a6ff; text-align: center; margin-bottom: 2rem; font-size: 1.8rem; text-transform: uppercase; letter-spacing: 1px;">Join the Arena</h1>
+
+    @using (Html.BeginUmbracoForm<MemberAuthController>(nameof(MemberAuthController.HandleRegister), null, new { @class = "register-form" }))
+    {
+
+            <div style="margin-bottom: 1.5rem;">
+            @Html.LabelFor(m => registerModel.Username, "Username", new { @style = "display: block; margin-bottom: 0.5rem; color: #8b949e; font-weight: bold; font-size: 0.9rem;" })
+            @Html.TextBoxFor(m => registerModel.Username, new { @style = "width: 100%; padding: 0.8rem; background: #0d1117; border: 1px solid #30363d; color: #c9d1d9; border-radius: 4px; box-sizing: border-box;" })
+            @Html.ValidationMessageFor(m => registerModel.Username, "", new { @style = "color: #ff7b72; font-size: 0.8rem; display: block; margin-top: 0.5rem;" })
+        </div>
+
+        <div style="margin-bottom: 1.5rem;">
+            @Html.LabelFor(m => registerModel.Email, "Email Address", new { @style = "display: block; margin-bottom: 0.5rem; color: #8b949e; font-weight: bold; font-size: 0.9rem;" })
+            @Html.TextBoxFor(m => registerModel.Email, new { @style = "width: 100%; padding: 0.8rem; background: #0d1117; border: 1px solid #30363d; color: #c9d1d9; border-radius: 4px; box-sizing: border-box;" })
+            @Html.ValidationMessageFor(m => registerModel.Email, "", new { @style = "color: #ff7b72; font-size: 0.8rem; display: block; margin-top: 0.5rem;" })
+        </div>
+
+        <div style="margin-bottom: 1.5rem;">
+            @Html.LabelFor(m => registerModel.Password, "Password", new { @style = "display: block; margin-bottom: 0.5rem; color: #8b949e; font-weight: bold; font-size: 0.9rem;" })
+            @Html.PasswordFor(m => registerModel.Password, new { @style = "width: 100%; padding: 0.8rem; background: #0d1117; border: 1px solid #30363d; color: #c9d1d9; border-radius: 4px; box-sizing: border-box;" })
+            @Html.ValidationMessageFor(m => registerModel.Password, "", new { @style = "color: #ff7b72; font-size: 0.8rem; display: block; margin-top: 0.5rem;" })
+        </div>
+
+        <div style="margin-bottom: 2rem;">
+            @Html.LabelFor(m => registerModel.ConfirmPassword, "Confirm Password", new { @style = "display: block; margin-bottom: 0.5rem; color: #8b949e; font-weight: bold; font-size: 0.9rem;" })
+            @Html.PasswordFor(m => registerModel.ConfirmPassword, new { @style = "width: 100%; padding: 0.8rem; background: #0d1117; border: 1px solid #30363d; color: #c9d1d9; border-radius: 4px; box-sizing: border-box;" })
+            @Html.ValidationMessageFor(m => registerModel.ConfirmPassword, "", new { @style = "color: #ff7b72; font-size: 0.8rem; display: block; margin-top: 0.5rem;" })
+        </div>
+
+        @Html.ValidationSummary(true, "", new { @style = "color: #ff7b72; margin-bottom: 1.5rem; font-size: 0.9rem; text-align: center; font-weight: bold;" })
+
+        <button type="submit" style="width: 100%; padding: 1rem; background-color: #238636; color: white; border: none; border-radius: 4px; font-weight: bold; font-size: 1rem; cursor: pointer; text-transform: uppercase; letter-spacing: 1px; transition: background 0.2s;">Create Account</button>
+    }
+</div>
