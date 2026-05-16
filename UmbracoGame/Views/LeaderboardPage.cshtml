@@ -5,11 +5,10 @@
 	Layout = null;
 
 	var allRuns = Model.Children
-        .Where(x => x.ContentType.Alias == "runRecord")
-        .OrderByDescending(x => x.Value<int>("finalLevel"))
-        .ThenByDescending(x => x.Value<decimal>("totalXP"));
+.Where(x => x.ContentType.Alias == "runRecord")
+        .OrderByDescending(x => x.Value<int>("encountersSurvived"))
+        .ThenByDescending(x => x.Value<int>("enemiesKilled"));
 }
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -18,17 +17,18 @@
     <title>@Model.Value("title")</title>
     
     <style>
-        body { background-color: #121212; color: #e0e0e0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; text-align: center; margin: 0; padding: 2rem; }
-        h1 { color: #00ffcc; text-transform: uppercase; letter-spacing: 2px; }
-        .description { margin-bottom: 2rem; color: #aaaaaa; }
+        body { background-color: #0d1117; color: #c9d1d9; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; text-align: center; margin: 0; padding: 2rem; }
+        h1 { color: #ff5555; text-transform: uppercase; letter-spacing: 2px; }
+        .description { margin-bottom: 2rem; color: #8b949e; }
         
-        table { margin: 0 auto; border-collapse: collapse; width: 100%; max-width: 1000px; background-color: #1e1e1e; box-shadow: 0 4px 8px rgba(0,0,0,0.5); border-radius: 8px; overflow: hidden; }
-        th, td { padding: 1.2rem; border-bottom: 1px solid #333; text-align: center; }
-        th { background-color: #2a2a2a; color: #00ffcc; font-weight: bold; text-transform: uppercase; font-size: 0.9rem; }
-        tr:hover { background-color: #252525; transition: background-color 0.2s; }
+        table { margin: 0 auto; border-collapse: collapse; width: 100%; max-width: 1200px; background-color: #161b22; box-shadow: 0 8px 16px rgba(0,0,0,0.6); border-radius: 8px; overflow: hidden; }
+        th, td { padding: 1rem; border-bottom: 1px solid #30363d; text-align: center; font-size: 0.95rem; }
+        th { background-color: #21262d; color: #ff7b72; font-weight: bold; text-transform: uppercase; font-size: 0.85rem; letter-spacing: 1px; }
+        tr:hover { background-color: #1f2428; transition: background-color 0.2s; }
         
-        .rank { font-weight: bold; color: #ffbf00; }
-        .empty-state { padding: 3rem; color: #777; font-style: italic; }
+        .rank { font-weight: bold; color: #e3b341; font-size: 1.1rem; }
+        .player-name { font-weight: bold; color: #58a6ff; }
+        .empty-state { padding: 3rem; color: #8b949e; font-style: italic; }
     </style>
 </head>
 <body>
@@ -43,10 +43,13 @@
             <tr>
                 <th>Rank</th>
                 <th>Player</th>
-                <th>Level Reached</th>
-                <th>Total XP</th>
-                <th>Time Survived (s)</th>
-                <th>Cause of Death</th>
+                <th>Encounters</th>
+                <th>Kills</th>
+                <th>Dmg Taken</th>
+                <th>Dmg Absorbed</th>
+                <th>Max Turn Dmg</th>
+                <th>Perfect Fights</th>
+                <th>Time (s)</th>
             </tr>
         </thead>
         <tbody>
@@ -57,12 +60,15 @@
                 {
                     <tr>
                         <td class="rank">#@rank</td>
+                        <td class="player-name">@run.Value("playerName")</td>
                         
-                        <td>@run.Value("playerName")</td>
-                        <td>@run.Value("finalLevel")</td>
-                        <td>@run.Value("totalXP")</td>
-                        <td>@run.Value("timeSurvived")</td>
-                        <td>@run.Value("causeOfDeath")</td>
+                        <td>@run.Value("encountersSurvived")</td>
+                        <td>@run.Value("enemiesKilled")</td>
+                        <td>@run.Value("totalDamageTaken")</td>
+                        <td>@run.Value("damageAbsorbed")</td>
+                        <td>@run.Value("highestSingleTurnDamage")</td>
+                        <td>@run.Value("perfectFights")</td>
+                        <td>@Math.Round(run.Value<decimal>("timeSpentInBattle"), 1)</td>
                     </tr>
                     rank++;
                 }
@@ -70,7 +76,7 @@
             else
             {
                 <tr>
-                    <td colspan="6" class="empty-state">No runs recorded yet. Waiting for game data...</td>
+                    <td colspan="9" class="empty-state">No combat records found. The arena awaits...</td>
                 </tr>
             }
         </tbody>

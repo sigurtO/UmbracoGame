@@ -50,19 +50,39 @@ namespace Umbraco.Cms.Web.Common.PublishedModels
 		// properties
 
 		///<summary>
-		/// Cause Of Death
+		/// damageAbsorbed
 		///</summary>
 		[global::System.CodeDom.Compiler.GeneratedCodeAttribute("Umbraco.ModelsBuilder.Embedded", "17.3.5+1486121")]
-		[global::System.Diagnostics.CodeAnalysis.MaybeNull]
-		[ImplementPropertyType("causeOfDeath")]
-		public virtual string CauseOfDeath => this.Value<string>(_publishedValueFallback, "causeOfDeath");
+		[ImplementPropertyType("damageAbsorbed")]
+		public virtual int DamageAbsorbed => this.Value<int>(_publishedValueFallback, "damageAbsorbed");
 
 		///<summary>
-		/// Final Level
+		/// encountersSurvived
 		///</summary>
 		[global::System.CodeDom.Compiler.GeneratedCodeAttribute("Umbraco.ModelsBuilder.Embedded", "17.3.5+1486121")]
-		[ImplementPropertyType("finalLevel")]
-		public virtual int FinalLevel => this.Value<int>(_publishedValueFallback, "finalLevel");
+		[ImplementPropertyType("encountersSurvived")]
+		public virtual int EncountersSurvived => this.Value<int>(_publishedValueFallback, "encountersSurvived");
+
+		///<summary>
+		/// enemiesKilled
+		///</summary>
+		[global::System.CodeDom.Compiler.GeneratedCodeAttribute("Umbraco.ModelsBuilder.Embedded", "17.3.5+1486121")]
+		[ImplementPropertyType("enemiesKilled")]
+		public virtual int EnemiesKilled => this.Value<int>(_publishedValueFallback, "enemiesKilled");
+
+		///<summary>
+		/// highestSingleTurnDamage
+		///</summary>
+		[global::System.CodeDom.Compiler.GeneratedCodeAttribute("Umbraco.ModelsBuilder.Embedded", "17.3.5+1486121")]
+		[ImplementPropertyType("highestSingleTurnDamage")]
+		public virtual int HighestSingleTurnDamage => this.Value<int>(_publishedValueFallback, "highestSingleTurnDamage");
+
+		///<summary>
+		/// perfectFights
+		///</summary>
+		[global::System.CodeDom.Compiler.GeneratedCodeAttribute("Umbraco.ModelsBuilder.Embedded", "17.3.5+1486121")]
+		[ImplementPropertyType("perfectFights")]
+		public virtual int PerfectFights => this.Value<int>(_publishedValueFallback, "perfectFights");
 
 		///<summary>
 		/// Player Name
@@ -80,17 +100,17 @@ namespace Umbraco.Cms.Web.Common.PublishedModels
 		public virtual global::System.DateTime RunDate => this.Value<global::System.DateTime>(_publishedValueFallback, "runDate");
 
 		///<summary>
-		/// Time Survived
+		/// timeSpentInBattle
 		///</summary>
 		[global::System.CodeDom.Compiler.GeneratedCodeAttribute("Umbraco.ModelsBuilder.Embedded", "17.3.5+1486121")]
-		[ImplementPropertyType("timeSurvived")]
-		public virtual decimal TimeSurvived => this.Value<decimal>(_publishedValueFallback, "timeSurvived");
+		[ImplementPropertyType("timeSpentInBattle")]
+		public virtual decimal TimeSpentInBattle => this.Value<decimal>(_publishedValueFallback, "timeSpentInBattle");
 
 		///<summary>
-		/// Total XP
+		/// totalDamageTaken
 		///</summary>
 		[global::System.CodeDom.Compiler.GeneratedCodeAttribute("Umbraco.ModelsBuilder.Embedded", "17.3.5+1486121")]
-		[ImplementPropertyType("totalXP")]
-		public virtual decimal TotalXP => this.Value<decimal>(_publishedValueFallback, "totalXP");
+		[ImplementPropertyType("totalDamageTaken")]
+		public virtual int TotalDamageTaken => this.Value<int>(_publishedValueFallback, "totalDamageTaken");
 	}
 }

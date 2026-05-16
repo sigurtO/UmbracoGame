@@ -20,7 +20,6 @@ namespace UmbracoGame.Controllers
             _contentService = contentService;
         }
 
-        // 3. We explicitly name the route for this specific action
         [HttpPost("submitrun")]
         public IActionResult SubmitRun([FromBody] RunReportData payload)
         {
@@ -29,16 +28,21 @@ namespace UmbracoGame.Controllers
             var leaderboardPage = _contentService.GetRootContent().FirstOrDefault(x => x.ContentType.Alias == "leaderboardPage");
 
             if (leaderboardPage == null)
-                return NotFound("Could not find the Leaderboard page in Umbraco to attach the score to.");
+                return NotFound("Could not find the Leaderboard page.");
 
-            string nodeName = $"Run - {payload.playerName} - Level {payload.finalLevel}";
+            // Updated node naming to reflect the new metrics
+            string nodeName = $"Run - {payload.playerName} - Encounters: {payload.encountersSurvived}";
             var newRun = _contentService.Create(nodeName, leaderboardPage.Id, "runRecord");
 
+            // Mapping the new properties
             newRun.SetValue("playerName", payload.playerName);
-            newRun.SetValue("timeSurvived", payload.timeSurvived);
-            newRun.SetValue("finalLevel", payload.finalLevel);
-            newRun.SetValue("totalXP", payload.totalXP);
-            newRun.SetValue("causeOfDeath", payload.causeOfDeath);
+            newRun.SetValue("enemiesKilled", payload.enemiesKilled);
+            newRun.SetValue("encountersSurvived", payload.encountersSurvived);
+            newRun.SetValue("totalDamageTaken", payload.totalDamageTaken);
+            newRun.SetValue("damageAbsorbed", payload.damageAbsorbed);
+            newRun.SetValue("timeSpentInBattle", payload.timeSpentInBattle);
+            newRun.SetValue("perfectFights", payload.perfectFights);
+            newRun.SetValue("highestSingleTurnDamage", payload.highestSingleTurnDamage);
 
             if (System.DateTime.TryParse(payload.runDate, out System.DateTime parsedDate))
             {
@@ -46,10 +50,9 @@ namespace UmbracoGame.Controllers
             }
 
             _contentService.Save(newRun);
-
             _contentService.Publish(newRun, new[] { "*" });
 
-            return Ok(new { status = "Success", message = $"Run saved for {payload.playerName}!" });
+            return Ok(new { status = "Success", message = $"Combat record saved for {payload.playerName}!" });
         }
     }
 }
