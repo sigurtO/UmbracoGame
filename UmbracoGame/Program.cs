@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.StaticFiles;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
@@ -9,6 +10,19 @@ builder.CreateUmbracoBuilder()
 
 WebApplication app = builder.Build();
 
+
+var provider = new FileExtensionContentTypeProvider();
+
+// Tell the server these files are safe and how to read them
+provider.Mappings[".data"] = "application/octet-stream";
+provider.Mappings[".wasm"] = "application/wasm";
+provider.Mappings[".symbols.json"] = "application/json";
+provider.Mappings[".unityweb"] = "application/octet-stream"; // Just in case!
+
+app.UseStaticFiles(new StaticFileOptions
+{
+    ContentTypeProvider = provider
+});
 
 await app.BootUmbracoAsync();
 

@@ -1,0 +1,37 @@
+﻿@using Umbraco.Cms.Web.Common.PublishedModels;
+@inherits Umbraco.Cms.Web.Common.Views.UmbracoViewPage<ContentModels.GamePage>
+@using ContentModels = Umbraco.Cms.Web.Common.PublishedModels;
+@{
+	Layout = "master.cshtml";
+	ViewData["Title"] = "Arena";
+    
+    // Check if the user is logged in, and grab their username!
+    var isLoggedIn = Context.User?.Identity?.IsAuthenticated ?? false;
+    var currentUsername = isLoggedIn ? Context.User.Identity.Name : "";
+}
+
+<div style="display: flex; flex-direction: column; align-items: center; justify-content: center; margin-top: 2rem;">
+    
+    @if (!isLoggedIn)
+    {
+        <div style="background-color: #30363d; color: #ff7b72; padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem; font-weight: bold;">
+            Warning: You are playing as a Guest. <a href="/login" style="color: #58a6ff;">Log in</a> to save your stats to the leaderboard!
+        </div>
+    }
+
+    <script>
+        // Umbraco sets this variable when the page loads!
+        // If they aren't logged in, it renders as an empty string "".
+        window.UmbracoPlayerName = "@currentUsername";
+    </script>
+
+    <div style="background: #161b22; padding: 1rem; border-radius: 8px; box-shadow: 0 8px 16px rgba(0,0,0,0.8); border: 1px solid #30363d;">
+        <iframe src="/CardGame/index.html" 
+                width="960" 
+                height="600" 
+                style="border: none; border-radius: 4px;" 
+                scrolling="no">
+        </iframe>
+    </div>
+
+</div>
