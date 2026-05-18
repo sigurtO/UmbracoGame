@@ -17,13 +17,16 @@ namespace UmbracoGame.Controllers
     {
         private readonly IContentService _contentService;
         private readonly HttpClient _httpClient; // call API for validation
+        private readonly IConfiguration _configuration;
 
         private readonly string _googleApiKey;
 
-        public GameDataController(IContentService contentService, HttpClient httpClient)
+        public GameDataController(IContentService contentService, HttpClient httpClient, IConfiguration configuration)
         {
             _contentService = contentService;
             _httpClient = httpClient;
+            _configuration = configuration;
+            _googleApiKey = _configuration["GoogleAi:ApiKey"];
 
         }
 
