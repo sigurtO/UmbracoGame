@@ -50,6 +50,21 @@ namespace Umbraco.Cms.Web.Common.PublishedModels
 		// properties
 
 		///<summary>
+		/// AI Reason
+		///</summary>
+		[global::System.CodeDom.Compiler.GeneratedCodeAttribute("Umbraco.ModelsBuilder.Embedded", "17.3.5+1486121")]
+		[global::System.Diagnostics.CodeAnalysis.MaybeNull]
+		[ImplementPropertyType("aiReason")]
+		public virtual string AiReason => this.Value<string>(_publishedValueFallback, "aiReason");
+
+		///<summary>
+		/// AI Score
+		///</summary>
+		[global::System.CodeDom.Compiler.GeneratedCodeAttribute("Umbraco.ModelsBuilder.Embedded", "17.3.5+1486121")]
+		[ImplementPropertyType("aiScore")]
+		public virtual int AiScore => this.Value<int>(_publishedValueFallback, "aiScore");
+
+		///<summary>
 		/// damageAbsorbed
 		///</summary>
 		[global::System.CodeDom.Compiler.GeneratedCodeAttribute("Umbraco.ModelsBuilder.Embedded", "17.3.5+1486121")]

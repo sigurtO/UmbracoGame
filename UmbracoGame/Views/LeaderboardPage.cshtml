@@ -2,10 +2,10 @@
 @inherits Umbraco.Cms.Web.Common.Views.UmbracoViewPage<ContentModels.LeaderboardPage>
 @using ContentModels = Umbraco.Cms.Web.Common.PublishedModels;
 @{
-	Layout = "master.cshtml";
+    Layout = "master.cshtml";
 
-	var allRuns = Model.Children()
-.Where(x => x.ContentType.Alias == "runRecord")
+    var allRuns = Model.Children()
+        .Where(x => x.ContentType.Alias == "runRecord")
         .OrderByDescending(x => x.Value<int>("encountersSurvived"))
         .ThenByDescending(x => x.Value<int>("enemiesKilled"));
 }
@@ -21,7 +21,7 @@
         h1 { color: #ff5555; text-transform: uppercase; letter-spacing: 2px; }
         .description { margin-bottom: 2rem; color: #8b949e; }
         
-        table { margin: 0 auto; border-collapse: collapse; width: 100%; max-width: 1200px; background-color: #161b22; box-shadow: 0 8px 16px rgba(0,0,0,0.6); border-radius: 8px; overflow: hidden; }
+        table { margin: 0 auto; border-collapse: collapse; width: 100%; max-width: 1300px; background-color: #161b22; box-shadow: 0 8px 16px rgba(0,0,0,0.6); border-radius: 8px; overflow: hidden; }
         th, td { padding: 1rem; border-bottom: 1px solid #30363d; text-align: center; font-size: 0.95rem; }
         th { background-color: #21262d; color: #ff7b72; font-weight: bold; text-transform: uppercase; font-size: 0.85rem; letter-spacing: 1px; }
         tr:hover { background-color: #1f2428; transition: background-color 0.2s; }
@@ -29,6 +29,12 @@
         .rank { font-weight: bold; color: #e3b341; font-size: 1.1rem; }
         .player-name { font-weight: bold; color: #58a6ff; }
         .empty-state { padding: 3rem; color: #8b949e; font-style: italic; }
+
+        /* Nye AI Trust Score styles */
+        .trust-high { color: #3fb950; font-weight: bold; } /* Grøn til legitime runs */
+        .trust-warning { color: #d29922; font-weight: bold; } /* Gul til runs der blev flaget, men godkendt af admin */
+        .trust-unknown { color: #8b949e; font-style: italic; } /* Grå hvis AI var nede (score = 0) */
+        .ai-reason { font-size: 0.8rem; color: #8b949e; max-width: 150px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: inline-block; }
     </style>
 </head>
 <body>
@@ -50,6 +56,8 @@
                 <th>Max Turn Dmg</th>
                 <th>Perfect Fights</th>
                 <th>Time (s)</th>
+                <th>AI Trust Score</th>
+                <th>AI Note</th>
             </tr>
         </thead>
         <tbody>
@@ -58,6 +66,14 @@
                 int rank = 1;
                 foreach (var run in allRuns)
                 {
+                    // Trækker AI værdierne ud
+                    int aiScore = run.Value<int>("aiScore");
+                    string aiReason = run.Value<string>("aiReason") ?? "-";
+
+                    // Sætter CSS klassen baseret på scoren
+                    string scoreClass = aiScore >= 80 ? "trust-high" : (aiScore > 0 ? "trust-warning" : "trust-unknown");
+                    string displayScore = aiScore > 0 ? $"{aiScore}%" : "N/A";
+
                     <tr>
                         <td class="rank">#@rank</td>
                         <td class="player-name">@run.Value("playerName")</td>
@@ -69,6 +85,9 @@
                         <td>@run.Value("highestSingleTurnDamage")</td>
                         <td>@run.Value("perfectFights")</td>
                         <td>@Math.Round(run.Value<decimal>("timeSpentInBattle"), 1)</td>
+                        
+                        <td class="@scoreClass">@displayScore</td>
+                        <td><span class="ai-reason" title="@aiReason">@aiReason</span></td>
                     </tr>
                     rank++;
                 }
@@ -76,7 +95,7 @@
             else
             {
                 <tr>
-                    <td colspan="9" class="empty-state">No combat records found. The arena awaits...</td>
+                    <td colspan="11" class="empty-state">No combat records found. The arena awaits...</td>
                 </tr>
             }
         </tbody>

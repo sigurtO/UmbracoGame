@@ -98,6 +98,8 @@ StyleCopReport.xml
 *.svclog
 *.scc
 
+
+
 # Chutzpah Test files
 _Chutzpah*
 
@@ -361,3 +363,7 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+
+# Appsettings dev ignored
+appsettings.Development.json
+UmbracoGame/appsettings.Development.json
