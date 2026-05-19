@@ -50,6 +50,14 @@ namespace Umbraco.Cms.Web.Common.PublishedModels
 		// properties
 
 		///<summary>
+		/// adminComment: Comment to ai for improvements
+		///</summary>
+		[global::System.CodeDom.Compiler.GeneratedCodeAttribute("Umbraco.ModelsBuilder.Embedded", "17.3.5+1486121")]
+		[global::System.Diagnostics.CodeAnalysis.MaybeNull]
+		[ImplementPropertyType("adminComment")]
+		public virtual string AdminComment => this.Value<string>(_publishedValueFallback, "adminComment");
+
+		///<summary>
 		/// AI Reason
 		///</summary>
 		[global::System.CodeDom.Compiler.GeneratedCodeAttribute("Umbraco.ModelsBuilder.Embedded", "17.3.5+1486121")]
@@ -93,6 +101,13 @@ namespace Umbraco.Cms.Web.Common.PublishedModels
 		public virtual int HighestSingleTurnDamage => this.Value<int>(_publishedValueFallback, "highestSingleTurnDamage");
 
 		///<summary>
+		/// isAiRight: Was the ai correct
+		///</summary>
+		[global::System.CodeDom.Compiler.GeneratedCodeAttribute("Umbraco.ModelsBuilder.Embedded", "17.3.5+1486121")]
+		[ImplementPropertyType("isAiRight")]
+		public virtual bool IsAiRight => this.Value<bool>(_publishedValueFallback, "isAiRight");
+
+		///<summary>
 		/// perfectFights
 		///</summary>
 		[global::System.CodeDom.Compiler.GeneratedCodeAttribute("Umbraco.ModelsBuilder.Embedded", "17.3.5+1486121")]
@@ -113,6 +128,13 @@ namespace Umbraco.Cms.Web.Common.PublishedModels
 		[global::System.CodeDom.Compiler.GeneratedCodeAttribute("Umbraco.ModelsBuilder.Embedded", "17.3.5+1486121")]
 		[ImplementPropertyType("runDate")]
 		public virtual global::System.DateTime RunDate => this.Value<global::System.DateTime>(_publishedValueFallback, "runDate");
+
+		///<summary>
+		/// Send to AI: Send to AI to improve its dectection
+		///</summary>
+		[global::System.CodeDom.Compiler.GeneratedCodeAttribute("Umbraco.ModelsBuilder.Embedded", "17.3.5+1486121")]
+		[ImplementPropertyType("sendToAiForImprovements")]
+		public virtual bool SendToAiForImprovements => this.Value<bool>(_publishedValueFallback, "sendToAiForImprovements");
 
 		///<summary>
 		/// timeSpentInBattle

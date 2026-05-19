@@ -7,6 +7,8 @@ using Umbraco.Cms.Core.Services;
 using Umbraco.Cms.Web.Common.Controllers;
 using System.Text.Json;
 using Microsoft.Extensions.Configuration; // user secrets
+using System.Net.Http;
+using System.Net.Http.Headers;
 using UmbracoGame.Models;
 
 namespace UmbracoGame.Controllers
@@ -16,18 +18,17 @@ namespace UmbracoGame.Controllers
     public class GameDataController : ControllerBase
     {
         private readonly IContentService _contentService;
-        private readonly HttpClient _httpClient; // call API for validation
+        private readonly IHttpClientFactory _httpClientFactory; // call API for validation
         private readonly IConfiguration _configuration;
 
-        private readonly string _googleApiKey;
+        private readonly string _mistralApiKey;
 
-        public GameDataController(IContentService contentService, HttpClient httpClient, IConfiguration configuration)
+        public GameDataController(IContentService contentService, IHttpClientFactory httpClientFactory, IConfiguration configuration)
         {
             _contentService = contentService;
-            _httpClient = httpClient;
+            _httpClientFactory = httpClientFactory;
             _configuration = configuration;
-            _googleApiKey = _configuration["GoogleAi:ApiKey"];
-
+            _mistralApiKey = _configuration["MistralAi:ApiKey"];
         }
 
         [HttpPost("submitrun")]
@@ -40,7 +41,7 @@ namespace UmbracoGame.Controllers
             if (leaderboardPage == null)
                 return NotFound("Could not find the Leaderboard page.");
 
-            var aiResult = await ValidateWithGoogleAI(payload); // check with AI is the result legit
+            var aiResult = await ValidateWithMistralAI(payload); // check with AI is the result legit
 
             // Updated node naming to reflect the new metrics
             string nodeName = $"Run - {payload.playerName} - Encounters: {payload.encountersSurvived}";
@@ -85,74 +86,125 @@ namespace UmbracoGame.Controllers
         }
 
         // --- AI LOGIKKEN (DE 5 P'ER) ---
-        private async Task<AiValidationResult> ValidateWithGoogleAI(RunReportData payload)
+        private async Task<AiValidationResult> ValidateWithMistralAI(RunReportData payload)
         {
+            string cleanApiKey = _mistralApiKey?.Trim();
+            if (string.IsNullOrEmpty(cleanApiKey))
+            {
+                return new AiValidationResult { LegitimacyPercentage = 0, FlagReason = "LOKAL FEJL: Mistral API-nøgle mangler." };
+            }
+
+            // --- 1. DYNAMISK HENTNING AF CURATED EDGE-CASES (Læringsdata) ---
+            var leaderboardPage = _contentService.GetRootContent().FirstOrDefault(x => x.ContentType.Alias == "leaderboardPage");
+            var allSavedRuns = _contentService.GetPagedChildren(leaderboardPage.Id, 0, 100, out long totalRecords);
+
+            // Vi henter KUN de runs, hvor admin aktivt har vinket af, at dataen skal sendes med som forbedring
+            var aiImprovementRuns = allSavedRuns
+                .Where(x => x.GetValue<bool>("sendToAiForImprovements") == true)
+                .Take(10); // max 10 for at holde prompten inden for grænserne
+
+            StringBuilder dynamicExamples = new StringBuilder();
+            foreach (var historicalRun in aiImprovementRuns)
+            {
+                bool isLegit = historicalRun.GetValue<bool>("isAiRight");
+                string statusText = isLegit ? "BEKRÆFTET LEGITIMT AF MENNESKELIG ADMIN" : "BEKRÆFTET SNYD/MANIPULERET AF MENNESKELIG ADMIN";
+                string adminNote = historicalRun.GetValue<string>("adminComment") ?? "Intet noteret.";
+
+                dynamicExamples.AppendLine($@"[Særligt Læringseksempel - {statusText}]:
+                Encounters: {historicalRun.GetValue<int>("encountersSurvived")}, Kills: {historicalRun.GetValue<int>("enemiesKilled")}, 
+                TotalDmg: {historicalRun.GetValue<int>("totalDamageTaken")}, Absorbed: {historicalRun.GetValue<int>("damageAbsorbed")}, 
+                MaxTurnDmg: {historicalRun.GetValue<int>("highestSingleTurnDamage")}, PerfectFights: {historicalRun.GetValue<int>("perfectFights")}, 
+                Time: {historicalRun.GetValue<decimal>("timeSpentInBattle")}s.
+                Forklaring fra admin på hvorfor dette run er markeret som {(isLegit ? "legitimt" : "snyd")}: {adminNote}
+                -----------------------------------");
+            }
+
+            if (dynamicExamples.Length == 0)
+            {
+                dynamicExamples.AppendLine("[Ingen specielle manuelle læringseksempler tilgængelige endnu. Stol udelukkende på dine standard grænseværdier].");
+            }
+
             try
             {
-                // De 5 P'er (Lektion 02) indbygget direkte i koden!
                 string prompt = $@"
-                Persona: Du er en erfaren anti-cheat sikkerhedsanalytiker for et turbaseret kortspil.
-                Problem: Vurder om indsendte data fra et spil-run er legitime eller manipuleret med memory-editing værktøjer.
-                Plan: Analysér forholdet mellem encountersSurvived, timeSpentInBattle og highestSingleTurnDamage.
-                Product: Returner UDELUKKENDE et gyldigt JSON-objekt med nøglerne 'LegitimacyPercentage' (0-100) og 'FlagReason' (kort tekst).
+                Persona: Du er en senior anti-cheat sikkerhedsanalytiker specialiseret i turbaserede kortspil.
+                Opgave: Vurder om indsendte data fra et spil-run er legitime eller manipuleret via memory-editing (f.eks. Cheat Engine).
 
-                Parameters:
-                - En gennemsnitlig kamp bør tage mindst 5-10 sekunder.
-                - Hvis highestSingleTurnDamage er over 9999, er det sandsynligvis manipuleret.
-                - Svar KUN med JSON, ingen formatering, ingen markdown tags.
+                Analyse-Parametre & Grænseværdier (Fundamentale Regler):
+                1. Skade-Lofte (Hard Cap): Spilleren starter med 100 HP og kan max heale 90 HP totalt (3 rest sites á 30%). Enhver 'totalDamageTaken' over 189 uden at dø er matematisk umulig og tyder på HP-hacks.
+                2. Damage-Output: En gennemsnitlig fjende har 50 HP. 'highestSingleTurnDamage' over 100 er ekstremt mistænkeligt og tyder på damage-multipliers.
+                3. Tids-Audit: (timeSpentInBattle / encountersSurvived). Hvis gennemsnittet er under 6 sekunder pr. kamp, er det fysisk umuligt for et menneske at læse kortene og tage beslutninger.
+                4. Korrelations-Check: 
+                   - Mange 'Perfect Fights' skal korrelere med lav 'totalDamageTaken'.
+                   - Høj 'totalDamageTaken' kombineret med 0 'Perfect Fights' og overlevelse tyder på manipulation af HP-værdien under kampen.
 
-                EKSEMPLER PÅ TIDLIGERE RUNS (Few-Shot Data):
-                [Eksempel 1 - Legitimt]: Tid: 45s, Encounters: 5, MaxDmg: 120, TotalDmgTaken: 40. (Dette er et normalt, menneskeligt run).
-                [Eksempel 2 - Legitimt Speedrun]: Tid: 28s, Encounters: 5, MaxDmg: 250, TotalDmgTaken: 10. (Dette er en meget dygtig spiller, høj skade, lav tid - men stadig matematisk muligt).
-                [Eksempel 3 - Manipuleret/Snyd]: Tid: 2s, Encounters: 10, MaxDmg: 999999, TotalDmgTaken: 0. (Cheat engine brugt til at ændre damage-variablen og fryse tiden).
-                [Eksempel 4 - Manipuleret/Snyd]: Tid: 15s, Encounters: 50, MaxDmg: 100, TotalDmgTaken: 0. (For mange encounters på for kort tid, umuligt scenarie).
+                Instruktion:
+                Returner UDELUKKENDE et gyldigt JSON-objekt. 
+                Du SKAL bruge præcis disse to nøgler: 'LegitimacyPercentage' (som et rent heltal mellem 0 og 100, uden %-tegn) og 'FlagReason' (som en kort tekst).
+                Eksempel på forventet output: {{""LegitimacyPercentage"": 95, ""FlagReason"": ""Alt ser normalt ud.""}}
 
-                DATA TIL ANALYSE (Dette er det NYE run, du skal vurdere ud fra ovenstående baseline):
-                Tid spillet (sekunder): {payload.timeSpentInBattle}
+                SÆRLIGE UNDTAGELSER OG LÆRINGSDATA (Brug disse manuelle admin-afgørelser til at finjustere din vurdering):
+                {dynamicExamples.ToString()}
+
+                NYT RUN DER SKAL ANALYSERES NU (Hold dette op mod både de fundamentale regler og læringsdataen):
                 Encounters overlevet: {payload.encountersSurvived}
-                Max skade på én tur: {payload.highestSingleTurnDamage}
+                Enemies dræbt: {payload.enemiesKilled}
                 Total skade taget: {payload.totalDamageTaken}
+                Skade absorberet: {payload.damageAbsorbed}
+                Max skade på én tur: {payload.highestSingleTurnDamage}
+                Perfect fights: {payload.perfectFights}
+                Tid spillet (sekunder): {payload.timeSpentInBattle}
                 ";
 
-                // Formater request til Googles Gemini API format
+                // Mistrals specifikke JSON struktur
                 var requestBody = new
                 {
-                    contents = new[] {
-                        new { parts = new[] { new { text = prompt } } }
-                    }
+                    model = "mistral-small-latest", // Mistrals hurtigste og billigste model
+                    messages = new[]
+                    {
+                new { role = "user", content = prompt }
+            },
+                    response_format = new { type = "json_object" } // Dette tvinger Mistral til altid at svare i perfekt JSON!
                 };
 
-                var content = new StringContent(JsonSerializer.Serialize(requestBody), Encoding.UTF8, "application/json");
-                var url = $"[https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=](https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=){_googleApiKey}";
+                string jsonString = JsonSerializer.Serialize(requestBody);
+                var content = new StringContent(jsonString, System.Text.Encoding.UTF8, "application/json");
 
-                var response = await _httpClient.PostAsync(url, content);
-                response.EnsureSuccessStatusCode();
+                var client = _httpClientFactory.CreateClient();
+
+                // Mistral bruger Bearer godkendelse i stedet for en API-nøgle direkte i URL'en
+                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", cleanApiKey);
+
+                // Mistrals Endpoint URL
+                var url = "https://api.mistral.ai/v1/chat/completions";
+
+                var response = await client.PostAsync(url, content);
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    string mistralError = await response.Content.ReadAsStringAsync();
+                    return new AiValidationResult { LegitimacyPercentage = 0, FlagReason = $"Mistral API Fejl {response.StatusCode}: {mistralError}" };
+                }
 
                 var responseString = await response.Content.ReadAsStringAsync();
 
-                // Trækker selve teksten ud af Googles ret komplekse JSON-struktur
+                // Mistrals svar-struktur er anderledes at pakke ud end Googles
                 using var jsonDoc = JsonDocument.Parse(responseString);
                 var aiTextResponse = jsonDoc.RootElement
-                    .GetProperty("candidates")[0]
-                    .GetProperty("content")
-                    .GetProperty("parts")[0]
-                    .GetProperty("text").GetString();
+                    .GetProperty("choices")[0]
+                    .GetProperty("message")
+                    .GetProperty("content").GetString();
 
-                // Konverter tekstsvaret fra AI til vores C# model
-                return JsonSerializer.Deserialize<AiValidationResult>(aiTextResponse.Trim());
+                // Renser og konverterer til C# objekt
+                string cleanedResponse = aiTextResponse?.Replace("```json", "").Replace("```", "").Trim() ?? "{}";
+                var result = JsonSerializer.Deserialize<AiValidationResult>(cleanedResponse);
+
+                return result ?? new AiValidationResult { LegitimacyPercentage = 0, FlagReason = "Kunne ikke parse JSON" };
             }
             catch (Exception ex)
             {
-                // Availability/Tilgængelighed (Lektion 1)
-                // Hvis Google er nede, returnerer vi en sikkerheds-score på 0 (Pending), 
-                // så dataen ikke går tabt, men ej heller bliver auto-publiceret.
-                return new AiValidationResult
-                {
-                    LegitimacyPercentage = 0,
-                    FlagReason = "System fejl / AI utilgængelig: " + ex.Message
-                };
+                return new AiValidationResult { LegitimacyPercentage = 0, FlagReason = "System fejl / C# Exception: " + ex.Message };
             }
         }
     }
-
 }
