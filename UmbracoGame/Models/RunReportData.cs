@@ -10,7 +10,6 @@ namespace UmbracoGame.Models
         public string playerName { get; set; }
         public string runDate { get; set; }
 
-        // New Combat Metrics
         public int enemiesKilled { get; set; }
         public int encountersSurvived { get; set; }
         public int totalDamageTaken { get; set; }

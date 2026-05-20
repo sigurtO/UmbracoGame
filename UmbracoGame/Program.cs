@@ -1,4 +1,6 @@
 using Microsoft.AspNetCore.StaticFiles;
+using UmbracoGame.Interface;
+using UmbracoGame.Service;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
@@ -7,6 +9,8 @@ builder.CreateUmbracoBuilder()
     .AddWebsite()
     .AddComposers()
     .Build();
+
+builder.Services.AddScoped<IAiValidationService, MistralAiValidationService>();
 
 WebApplication app = builder.Build();
 
