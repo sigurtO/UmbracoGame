@@ -6,7 +6,6 @@ namespace UmbracoGame.Models
 {
     public class RunReportData
     {
-        // Core Leaderboard Info
         public string playerName { get; set; }
         public string runDate { get; set; }
 
