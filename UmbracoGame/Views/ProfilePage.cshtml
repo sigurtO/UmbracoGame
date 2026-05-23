@@ -1,0 +1,45 @@
+﻿@using Umbraco.Cms.Web.Common.PublishedModels;
+@inherits Umbraco.Cms.Web.Common.Views.UmbracoViewPage<ContentModels.ProfilePage>
+@using ContentModels = Umbraco.Cms.Web.Common.PublishedModels;
+@{
+	Layout = "master.cshtml";
+
+	// 1. Grab the username from the URL query string (e.g., ?user=Viking)
+    var profileUsername = Context.Request.Query["user"].ToString();
+
+    // 2. If someone navigates to /profile without a user in the URL, handle it gracefully
+    if (string.IsNullOrEmpty(profileUsername))
+    {
+        <div style="text-align: center; margin-top: 4rem;">
+            <h1 style="color: #ff7b72; text-transform: uppercase;">Profile Not Found</h1>
+            <p style="color: #8b949e;">Please select a player from the <a href="/leaderboard" style="color: #58a6ff;">Leaderboard</a>.</p>
+        </div>
+        return; // Stop running the rest of the code
+	}
+
+	// 3. Search Umbraco for all Run Records, and filter it down to JUST this player
+    var playerRuns = Umbraco.ContentAtRoot()
+        .SelectMany(x => x.DescendantsOrSelfOfType("runRecord"))
+        .Where(x => x.Value<string>("playerName") == profileUsername)
+        .OrderByDescending(x => x.Value<int>("encountersSurvived"))
+        .ThenByDescending(x => x.Value<int>("enemiesKilled"));
+        
+    ViewData["Title"] = $"{profileUsername}'s Profile";
+}
+
+<style>
+    .profile-header { text-align: center; margin: 3rem 0; }
+    .profile-name { color: #ff5555; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 0.5rem; font-size: 2.5rem; }
+    .profile-stats { color: #8b949e; font-size: 1.1rem; }
+    .stat-highlight { color: #e3b341; font-weight: bold; }
+</style>
+
+<div class="profile-header">
+    <h1 class="profile-name">@profileUsername</h1>
+    <p class="profile-stats">
+        Total Arena Deployments: <span class="stat-highlight">@playerRuns.Count()</span>
+    </p>
+</div>
+
+<!-- 4. Render the exact same table, but feed it the filtered list! -->
+@await Html.PartialAsync("Partials/_LeaderboardTable", playerRuns)

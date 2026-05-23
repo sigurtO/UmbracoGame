@@ -4,102 +4,23 @@
 @{
     Layout = "master.cshtml";
 
+    // Fetch all records for the global leaderboard
     var allRuns = Model.Children()
         .Where(x => x.ContentType.Alias == "runRecord")
         .OrderByDescending(x => x.Value<int>("encountersSurvived"))
         .ThenByDescending(x => x.Value<int>("enemiesKilled"));
 }
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>@Model.Value("title")</title>
-    
-    <style>
-        body { background-color: #0d1117; color: #c9d1d9; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; text-align: center; margin: 0; padding: 2rem; }
-        h1 { color: #ff5555; text-transform: uppercase; letter-spacing: 2px; }
-        .description { margin-bottom: 2rem; color: #8b949e; }
-        
-        table { margin: 0 auto; border-collapse: collapse; width: 100%; max-width: 1300px; background-color: #161b22; box-shadow: 0 8px 16px rgba(0,0,0,0.6); border-radius: 8px; overflow: hidden; }
-        th, td { padding: 1rem; border-bottom: 1px solid #30363d; text-align: center; font-size: 0.95rem; }
-        th { background-color: #21262d; color: #ff7b72; font-weight: bold; text-transform: uppercase; font-size: 0.85rem; letter-spacing: 1px; }
-        tr:hover { background-color: #1f2428; transition: background-color 0.2s; }
-        
-        .rank { font-weight: bold; color: #e3b341; font-size: 1.1rem; }
-        .player-name { font-weight: bold; color: #58a6ff; }
-        .empty-state { padding: 3rem; color: #8b949e; font-style: italic; }
 
-        /* Nye AI Trust Score styles */
-        .trust-high { color: #3fb950; font-weight: bold; } /* Grøn til legitime runs */
-        .trust-warning { color: #d29922; font-weight: bold; } /* Gul til runs der blev flaget, men godkendt af admin */
-        .trust-unknown { color: #8b949e; font-style: italic; } /* Grå hvis AI var nede (score = 0) */
-        .ai-reason { font-size: 0.8rem; color: #8b949e; max-width: 150px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: inline-block; }
-    </style>
-</head>
-<body>
+<style>
+    /* page-level layout styles*/
+    h1 { color: #ff5555; text-transform: uppercase; letter-spacing: 2px; text-align: center; }
+    .description { margin-bottom: 2rem; color: #8b949e; text-align: center; }
+</style>
 
-    <h1>@Model.Value("title")</h1>
-    <div class="description">
-        @Html.Raw(Model.Value("description"))
-    </div>
+<h1>@Model.Value("title")</h1>
+<div class="description">
+    @Html.Raw(Model.Value("description"))
+</div>
 
-    <table>
-        <thead>
-            <tr>
-                <th>Rank</th>
-                <th>Player</th>
-                <th>Encounters</th>
-                <th>Kills</th>
-                <th>Dmg Taken</th>
-                <th>Dmg Absorbed</th>
-                <th>Max Turn Dmg</th>
-                <th>Perfect Fights</th>
-                <th>Time (s)</th>
-                <th>AI Trust Score</th>
-                <th>AI Note</th>
-            </tr>
-        </thead>
-        <tbody>
-            @if (allRuns.Any())
-            {
-                int rank = 1;
-                foreach (var run in allRuns)
-                {
-                    // Trækker AI værdierne ud
-                    int aiScore = run.Value<int>("aiScore");
-                    string aiReason = run.Value<string>("aiReason") ?? "-";
-
-                    // Sætter CSS klassen baseret på scoren
-                    string scoreClass = aiScore >= 80 ? "trust-high" : (aiScore > 0 ? "trust-warning" : "trust-unknown");
-                    string displayScore = aiScore > 0 ? $"{aiScore}%" : "N/A";
-
-                    <tr>
-                        <td class="rank">#@rank</td>
-                        <td class="player-name">@run.Value("playerName")</td>
-                        
-                        <td>@run.Value("encountersSurvived")</td>
-                        <td>@run.Value("enemiesKilled")</td>
-                        <td>@run.Value("totalDamageTaken")</td>
-                        <td>@run.Value("damageAbsorbed")</td>
-                        <td>@run.Value("highestSingleTurnDamage")</td>
-                        <td>@run.Value("perfectFights")</td>
-                        <td>@Math.Round(run.Value<decimal>("timeSpentInBattle"), 1)</td>
-                        
-                        <td class="@scoreClass">@displayScore</td>
-                        <td><span class="ai-reason" title="@aiReason">@aiReason</span></td>
-                    </tr>
-                    rank++;
-                }
-            }
-            else
-            {
-                <tr>
-                    <td colspan="11" class="empty-state">No combat records found. The arena awaits...</td>
-                </tr>
-            }
-        </tbody>
-    </table>
-
-</body>
-</html>
+<!-- Call our leaderboard -->
+@await Html.PartialAsync("Partials/_LeaderboardTable", allRuns)

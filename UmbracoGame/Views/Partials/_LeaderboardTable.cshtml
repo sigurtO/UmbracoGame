@@ -1,0 +1,77 @@
+﻿@inherits Umbraco.Cms.Web.Common.Views.UmbracoViewPage<IEnumerable<IPublishedContent>>
+@using Umbraco.Cms.Core.Models.PublishedContent
+@using Umbraco.Extensions
+
+<style>
+    /* Only the table-specific styles live here now! */
+    .arena-table { margin: 0 auto; border-collapse: collapse; width: 100%; max-width: 1300px; background-color: #161b22; box-shadow: 0 8px 16px rgba(0,0,0,0.6); border-radius: 8px; overflow: hidden; }
+    .arena-table th, .arena-table td { padding: 1rem; border-bottom: 1px solid #30363d; text-align: center; font-size: 0.95rem; }
+    .arena-table th { background-color: #21262d; color: #ff7b72; font-weight: bold; text-transform: uppercase; font-size: 0.85rem; letter-spacing: 1px; }
+    .arena-table tr:hover { background-color: #1f2428; transition: background-color 0.2s; }
+    
+    .rank { font-weight: bold; color: #e3b341; font-size: 1.1rem; }
+    .player-name { font-weight: bold; color: #58a6ff; }
+    .empty-state { padding: 3rem; color: #8b949e; font-style: italic; }
+
+    .trust-high { color: #3fb950; font-weight: bold; } 
+    .trust-warning { color: #d29922; font-weight: bold; } 
+    .trust-unknown { color: #8b949e; font-style: italic; } 
+    .ai-reason { font-size: 0.8rem; color: #8b949e; max-width: 150px; white-space: normal; overflow: visible; text-overflow: unset; display: inline-block; }
+</style>
+
+<table class="arena-table">
+    <thead>
+        <tr>
+            <th>Rank</th>
+            <th>Player</th>
+            <th>Encounters</th>
+            <th>Kills</th>
+            <th>Dmg Taken</th>
+            <th>Dmg Absorbed</th>
+            <th>Max Turn Dmg</th>
+            <th>Perfect Fights</th>
+            <th>Time (s)</th>
+            <th>AI Trust Score</th>
+            <th>AI Note</th>
+        </tr>
+    </thead>
+    <tbody>
+        @if (Model.Any())
+        {
+            int rank = 1;
+            foreach (var run in Model)
+            {
+                int aiScore = run.Value<int>("aiScore");
+                string aiReason = run.Value<string>("aiReason") ?? "-";
+
+                string scoreClass = aiScore >= 80 ? "trust-high" : (aiScore > 0 ? "trust-warning" : "trust-unknown");
+                string displayScore = aiScore > 0 ? $"{aiScore}%" : "N/A";
+
+                <tr>
+                    <td class="rank">#@rank</td>
+                    <td class="player-name">
+                        <a href="/profile?user=@run.Value("playerName")" style="color: #58a6ff; text-decoration: none; font-weight: bold; transition: color 0.2s;" onmouseover="this.style.color='#79c0ff'" onmouseout="this.style.color='#58a6ff'">
+                        @run.Value("playerName")
+                        </a>
+                    </td>
+                    <td>@run.Value("encountersSurvived")</td>
+                    <td>@run.Value("enemiesKilled")</td>
+                    <td>@run.Value("totalDamageTaken")</td>
+                    <td>@run.Value("damageAbsorbed")</td>
+                    <td>@run.Value("highestSingleTurnDamage")</td>
+                    <td>@run.Value("perfectFights")</td>
+                    <td>@Math.Round(run.Value<decimal>("timeSpentInBattle"), 1)</td>
+                    <td class="@scoreClass">@displayScore</td>
+                    <td><span class="ai-reason" title="@aiReason">@aiReason</span></td>
+                </tr>
+                rank++;
+            }
+        }
+        else
+        {
+            <tr>
+                <td colspan="11" class="empty-state">No combat records found. The arena awaits...</td>
+            </tr>
+        }
+    </tbody>
+</table>
