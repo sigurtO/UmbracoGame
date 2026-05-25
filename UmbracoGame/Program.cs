@@ -21,7 +21,7 @@ var provider = new FileExtensionContentTypeProvider();
 provider.Mappings[".data"] = "application/octet-stream";
 provider.Mappings[".wasm"] = "application/wasm";
 provider.Mappings[".symbols.json"] = "application/json";
-provider.Mappings[".unityweb"] = "application/octet-stream"; // Just in case!
+provider.Mappings[".unityweb"] = "application/octet-stream";
 
 app.UseStaticFiles(new StaticFileOptions
 {
