@@ -4,10 +4,10 @@
 @{
 	Layout = "master.cshtml";
 
-	// 1. Grab the username from the URL query string (e.g., ?user=Viking)
+	// 1. Grab the username from the URL query string
     var profileUsername = Context.Request.Query["user"].ToString();
 
-    // 2. If someone navigates to /profile without a user in the URL, handle it gracefully
+    // 2. profile with no user
     if (string.IsNullOrEmpty(profileUsername))
     {
         <div style="text-align: center; margin-top: 4rem;">
@@ -41,5 +41,5 @@
     </p>
 </div>
 
-<!-- 4. Render the exact same table, but feed it the filtered list! -->
+<!-- 4. render leaderboard but with our new linq -->
 @await Html.PartialAsync("Partials/_LeaderboardTable", playerRuns)

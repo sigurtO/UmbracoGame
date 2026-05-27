@@ -30,25 +30,25 @@ namespace UmbracoGame.Service
         public async Task<AiValidationResult> ValidateRunAsync(RunReportData payload)
         {
             string cleanApiKey = _mistralApiKey?.Trim();
-            if (string.IsNullOrEmpty(cleanApiKey))
+            if (string.IsNullOrEmpty(cleanApiKey)) // makes sure everything still works even if the api key is missing
             {
                 return new AiValidationResult { LegitimacyPercentage = 0, FlagReason = "LOKAL FEJL: Mistral API-nøgle mangler." };
             }
 
-            // --- 1. DYNAMISK HENTNING AF CURATED EDGE-CASES (Læringsdata) ---
+            // --- finds leaderboard ---
             var leaderboardPage = _contentService.GetRootContent().FirstOrDefault(x => x.ContentType.Alias == "leaderboardPage");
 
             if (leaderboardPage == null)
                 return new AiValidationResult { LegitimacyPercentage = 0, FlagReason = "Leaderboard ikke fundet, kunne ikke hente læringsdata." };
-
+            // gets all runs
             var allSavedRuns = _contentService.GetPagedChildren(leaderboardPage.Id, 0, 100, out long totalRecords);
-
+            //bruger kun runs som er marked by admin
             var aiImprovementRuns = allSavedRuns
                 .Where(x => x.GetValue<bool>("sendToAiForImprovements") == true)
                 .Take(10);
 
             StringBuilder dynamicExamples = new StringBuilder();
-            foreach (var historicalRun in aiImprovementRuns)
+            foreach (var historicalRun in aiImprovementRuns) // reads through each run
             {
                 bool isLegit = historicalRun.GetValue<bool>("isAiRight");
                 string statusText = isLegit ? "BEKRÆFTET LEGITIMT AF MENNESKELIG ADMIN" : "BEKRÆFTET SNYD/MANIPULERET AF MENNESKELIG ADMIN";
@@ -68,7 +68,7 @@ namespace UmbracoGame.Service
                 dynamicExamples.AppendLine("[Ingen specielle manuelle læringseksempler tilgængelige endnu. Stol udelukkende på dine standard grænseværdier].");
             }
 
-            try
+            try // anti cheat agent prompt
             {
                 string prompt = $@"
                 Persona: Du er en senior anti-cheat sikkerhedsanalytiker specialiseret i turbaserede kortspil.
@@ -104,18 +104,18 @@ namespace UmbracoGame.Service
                 {
                     model = "mistral-small-latest",
                     messages = new[] { new { role = "user", content = prompt } },
-                    response_format = new { type = "json_object" }
+                    response_format = new { type = "json_object" } // force json returns
                 };
 
                 string jsonString = JsonSerializer.Serialize(requestBody);
                 var content = new StringContent(jsonString, Encoding.UTF8, "application/json");
 
-                var client = _httpClientFactory.CreateClient();
+                var client = _httpClientFactory.CreateClient(); //sends request to mistral
                 client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", cleanApiKey);
 
                 var response = await client.PostAsync("https://api.mistral.ai/v1/chat/completions", content);
 
-                if (!response.IsSuccessStatusCode)
+                if (!response.IsSuccessStatusCode) // if the api call fails, we return 0% legitimacy and the error message from mistral for easier debugging
                 {
                     string mistralError = await response.Content.ReadAsStringAsync();
                     return new AiValidationResult { LegitimacyPercentage = 0, FlagReason = $"Mistral API Fejl {response.StatusCode}: {mistralError}" };

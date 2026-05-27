@@ -18,7 +18,7 @@ namespace UmbracoGame.Controllers
 
         public GameDataController(IContentService contentService, IAiValidationService aiValidationService)
         {
-            _contentService = contentService;
+            _contentService = contentService; //create and save content in Umbraco
             _aiValidationService = aiValidationService;
         }
 

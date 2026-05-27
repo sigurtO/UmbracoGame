@@ -3,7 +3,7 @@
 @using ContentModels = Umbraco.Cms.Web.Common.PublishedModels;
 @{
 	Layout = "master.cshtml";
-	ViewData["Title"] = "Arena";
+	ViewData["Title"] = "Card Game";
     
     // Check if the user is logged in, and grab their username!
     var isLoggedIn = Context.User?.Identity?.IsAuthenticated ?? false;
@@ -20,7 +20,7 @@
     }
 
     <script>
-        // Umbraco sets this variable when the page loads!
+        // Umbraco sets this variable when the page loads we parse it to javascript so our bridge can reach
         window.UmbracoPlayerName = "@currentUsername";
     </script>
 
